@@ -1065,36 +1065,38 @@ PX4FMU::cycle()
 	if (_cycle_timestamp - _last_safety_check >= (unsigned int)1e5) {
 		_last_safety_check = _cycle_timestamp;
 
+		/**
+		 * Get and handle the safety status at 10Hz
+		 */
+		struct safety_s safety = {};
+
 		if (circuit_breaker_enabled("CBRK_IO_SAFETY", CBRK_IO_SAFETY_KEY)) {
 			/* safety switch disabled, turn LED on solid */
 			stm32_gpiowrite(GPIO_LED_SAFETY, 0);
+			_safety_off = true;
 
 		} else {
-			/* read safety switch input at 10Hz */
+			/* read safety switch input and control safety switch LED at 10Hz */
 			safety_check_button();
+		}
 
-			/**
-			 * Get and handle the safety status
-			 */
-			struct safety_s safety;
-			safety.timestamp = hrt_absolute_time();
+		safety.timestamp = hrt_absolute_time();
 
-			if (_safety_off) {
-				safety.safety_off = true;
-				safety.safety_switch_available = true;
+		if (_safety_off) {
+			safety.safety_off = true;
+			safety.safety_switch_available = true;
 
-			} else {
-				safety.safety_off = false;
-				safety.safety_switch_available = true;
-			}
+		} else {
+			safety.safety_off = false;
+			safety.safety_switch_available = true;
+		}
 
-			/* lazily publish the safety status */
-			if (_to_safety != nullptr) {
-				orb_publish(ORB_ID(safety), _to_safety, &safety);
+		/* lazily publish the safety status */
+		if (_to_safety != nullptr) {
+			orb_publish(ORB_ID(safety), _to_safety, &safety);
 
-			} else {
-				_to_safety = orb_advertise(ORB_ID(safety), &safety);
-			}
+		} else {
+			_to_safety = orb_advertise(ORB_ID(safety), &safety);
 		}
 	}
 
@@ -1110,7 +1112,7 @@ PX4FMU::cycle()
 		_throttle_armed = _safety_off && _armed.armed && !_armed.lockdown;
 
 		/* update PWM status if armed or if disarmed PWM values are set */
-		bool pwm_on = _safety_off && (_armed.armed || _num_disarmed_set > 0);
+		bool pwm_on = _armed.armed || _num_disarmed_set > 0;
 
 		if (_pwm_on != pwm_on) {
 			_pwm_on = pwm_on;
