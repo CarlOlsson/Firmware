@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2016 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,20 +31,62 @@
  *
  ****************************************************************************/
 
-#pragma once
+class MPU9250;
 
-#ifndef __PX4_QURT
-#include <nuttx/sched.h>
-#endif
+#pragma pack(push, 1)
+struct ak8963_regs {
+	uint8_t st1;
+	int16_t x;
+	int16_t y;
+	int16_t z;
+	uint8_t st2;
+};
+#pragma pack(pop)
 
-/*      SCHED_PRIORITY_MAX    */
-#define SCHED_PRIORITY_FAST_DRIVER           SCHED_PRIORITY_MAX
-#define SCHED_PRIORITY_WATCHDOG             (SCHED_PRIORITY_MAX - 5)
-#define SCHED_PRIORITY_ACTUATOR_OUTPUTS     (SCHED_PRIORITY_MAX - 15)
-#define SCHED_PRIORITY_ATTITUDE_CONTROL     (SCHED_PRIORITY_MAX - 25)
-#define SCHED_PRIORITY_SLOW_DRIVER          (SCHED_PRIORITY_MAX - 35)
-#define SCHED_PRIORITY_POSITION_CONTROL     (SCHED_PRIORITY_MAX - 40)
-/*      SCHED_PRIORITY_DEFAULT    */
-#define SCHED_PRIORITY_LOGGING              (SCHED_PRIORITY_DEFAULT - 10)
-#define SCHED_PRIORITY_PARAMS               (SCHED_PRIORITY_DEFAULT - 15)
-/*      SCHED_PRIORITY_IDLE    */
+/**
+ * Helper class implementing the magnetometer driver node.
+ */
+class MPU9250_mag : public device::CDev
+{
+public:
+	MPU9250_mag(MPU9250 *parent, const char *path);
+	~MPU9250_mag();
+
+	virtual ssize_t read(struct file *filp, char *buffer, size_t buflen);
+	virtual int ioctl(struct file *filp, int cmd, unsigned long arg);
+	virtual int init();
+
+	void set_passthrough(uint8_t reg, uint8_t size, uint8_t *out = NULL);
+	void passthrough_read(uint8_t reg, uint8_t *buf, uint8_t size);
+	void passthrough_write(uint8_t reg, uint8_t val);
+	void read_block(uint8_t reg, uint8_t *val, uint8_t count);
+
+	void ak8963_reset(void);
+	bool ak8963_setup(void);
+	bool ak8963_check_id(void);
+	bool ak8963_read_adjustments(void);
+
+protected:
+	friend class MPU9250;
+
+	void measure(struct ak8963_regs data);
+	int self_test(void);
+
+private:
+	MPU9250 *_parent;
+	orb_advert_t _mag_topic;
+	int _mag_orb_class_instance;
+	int _mag_class_instance;
+	bool _mag_reading_data;
+	ringbuffer::RingBuffer *_mag_reports;
+	struct mag_scale _mag_scale;
+	float _mag_range_scale;
+	perf_counter_t _mag_reads;
+	float _mag_asa_x;
+	float _mag_asa_y;
+	float _mag_asa_z;
+
+	/* do not allow to copy this class due to pointer data members */
+	MPU9250_mag(const MPU9250_mag &);
+	MPU9250_mag operator=(const MPU9250_mag &);
+};

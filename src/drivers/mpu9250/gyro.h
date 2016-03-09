@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2016 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,20 +31,34 @@
  *
  ****************************************************************************/
 
-#pragma once
+class MPU9250;
 
-#ifndef __PX4_QURT
-#include <nuttx/sched.h>
-#endif
+/**
+ * Helper class implementing the gyro driver node.
+ */
+class MPU9250_gyro : public device::CDev
+{
+public:
+	MPU9250_gyro(MPU9250 *parent, const char *path);
+	~MPU9250_gyro();
 
-/*      SCHED_PRIORITY_MAX    */
-#define SCHED_PRIORITY_FAST_DRIVER           SCHED_PRIORITY_MAX
-#define SCHED_PRIORITY_WATCHDOG             (SCHED_PRIORITY_MAX - 5)
-#define SCHED_PRIORITY_ACTUATOR_OUTPUTS     (SCHED_PRIORITY_MAX - 15)
-#define SCHED_PRIORITY_ATTITUDE_CONTROL     (SCHED_PRIORITY_MAX - 25)
-#define SCHED_PRIORITY_SLOW_DRIVER          (SCHED_PRIORITY_MAX - 35)
-#define SCHED_PRIORITY_POSITION_CONTROL     (SCHED_PRIORITY_MAX - 40)
-/*      SCHED_PRIORITY_DEFAULT    */
-#define SCHED_PRIORITY_LOGGING              (SCHED_PRIORITY_DEFAULT - 10)
-#define SCHED_PRIORITY_PARAMS               (SCHED_PRIORITY_DEFAULT - 15)
-/*      SCHED_PRIORITY_IDLE    */
+	virtual ssize_t		read(struct file *filp, char *buffer, size_t buflen);
+	virtual int		ioctl(struct file *filp, int cmd, unsigned long arg);
+
+	virtual int		init();
+
+protected:
+	friend class MPU9250;
+
+	void			parent_poll_notify();
+
+private:
+	MPU9250			*_parent;
+	orb_advert_t		_gyro_topic;
+	int			_gyro_orb_class_instance;
+	int			_gyro_class_instance;
+
+	/* do not allow to copy this class due to pointer data members */
+	MPU9250_gyro(const MPU9250_gyro &);
+	MPU9250_gyro operator=(const MPU9250_gyro &);
+};
