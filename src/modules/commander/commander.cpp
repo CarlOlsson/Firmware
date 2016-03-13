@@ -471,6 +471,47 @@ int commander_main(int argc, char *argv[])
 		return 0;
 	}
 
+	if (!strcmp(argv[1], "mode")) {
+		if (argc > 2) {
+			uint8_t new_main_state = vehicle_status_s::MAIN_STATE_MAX;
+			if (!strcmp(argv[2], "manual")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_MANUAL;
+			} else if (!strcmp(argv[2], "altctl")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_ALTCTL;
+			} else if (!strcmp(argv[2], "posctl")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_POSCTL;
+			} else if (!strcmp(argv[2], "auto:mission")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_AUTO_MISSION;
+			} else if (!strcmp(argv[2], "auto:loiter")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_AUTO_LOITER;
+			} else if (!strcmp(argv[2], "auto:rtl")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_AUTO_RTL;
+			} else if (!strcmp(argv[2], "acro")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_ACRO;
+			} else if (!strcmp(argv[2], "offboard")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_OFFBOARD;
+			} else if (!strcmp(argv[2], "stabilized")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_STAB;
+			} else if (!strcmp(argv[2], "rattitude")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_RATTITUDE;
+			} else if (!strcmp(argv[2], "auto:takeoff")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_AUTO_TAKEOFF;
+			} else if (!strcmp(argv[2], "auto:land")) {
+				new_main_state = vehicle_status_s::MAIN_STATE_AUTO_LAND;
+			} else {
+				warnx("argument %s unsupported.", argv[2]);
+			}
+
+			if (TRANSITION_DENIED == main_state_transition(&status, new_main_state)) {
+				warnx("mode change failed");
+			}
+			return 0;
+
+		} else {
+			warnx("missing argument");
+		}
+	}
+
 	if (!strcmp(argv[1], "lockdown")) {
 
 		if (argc < 3) {
@@ -505,7 +546,7 @@ void usage(const char *reason)
 		PX4_INFO("%s", reason);
 	}
 
-	PX4_INFO("usage: commander {start|stop|status|calibrate|check|arm|disarm}\n");
+	PX4_INFO("usage: commander {start|stop|status|calibrate|check|arm|disarm|takeoff|land|mode}\n");
 }
 
 void print_status()
@@ -2903,13 +2944,13 @@ set_main_state_rc(struct vehicle_status_s *status_local, struct manual_control_s
 	}
 
 	/* we know something has changed - check if we are in mode slot operation */
-	if (_last_sp_man.mode_slot > 0) {
+	if (sp_man->mode_slot > 0) {
 
-		if (_last_sp_man.mode_slot >= sizeof(_flight_mode_slots) / sizeof(_flight_mode_slots[0])) {
+		if (sp_man->mode_slot >= sizeof(_flight_mode_slots) / sizeof(_flight_mode_slots[0])) {
 			return TRANSITION_DENIED;
 		}
 
-		int new_mode = _flight_mode_slots[_last_sp_man.mode_slot];
+		int new_mode = _flight_mode_slots[sp_man->mode_slot];
 
 		if (new_mode < 0) {
 			/* slot is unused */
