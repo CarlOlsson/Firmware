@@ -429,7 +429,7 @@ struct log_EST4_s {
 /* --- EST5 - ESTIMATOR INNOVATIONS --- */
 #define LOG_EST5_MSG 49
 struct log_EST5_s {
-    float s[10];
+    float s[12];
 };
 
 /* --- EST6 - ESTIMATOR INNOVATIONS --- */
@@ -518,18 +518,6 @@ struct log_CTS_s {
 	float yaw_rate;
 };
 
-/* --- EST4 - ESTIMATOR INNOVATIONS --- */
-#define LOG_EST4_MSG 48
-struct log_EST4_s {
-    float s[12];
-};
-
-/* --- EST5 - ESTIMATOR INNOVATIONS --- */
-#define LOG_EST5_MSG 49
-struct log_EST5_s {
-    float s[10];
-};
-
 #define LOG_OUT1_MSG 50
 
 /* --- EKF2 REPLAY Part 1 --- */
@@ -569,12 +557,6 @@ struct log_RPL2_s {
 	float vel_e_m_s;
 	float vel_d_m_s;
 	bool vel_ned_valid;
-};
-
-/* --- EST6 - ESTIMATOR INNOVATIONS --- */
-#define LOG_EST6_MSG 53
-struct log_EST6_s {
-    float s[6];
 };
 
 /* --- EKF2 REPLAY Part 3 --- */
