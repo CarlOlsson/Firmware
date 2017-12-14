@@ -1879,24 +1879,24 @@ FixedwingPositionControl::tecs_update_pitch_throttle(float alt_sp, float airspee
 		break;
 	}
 
-	t.altitudeSp			= _tecs.hgt_setpoint_adj();
-	t.altitude_filtered		= _tecs.vert_pos_state();
-	t.airspeedSp			= _tecs.TAS_setpoint_adj();
-	t.airspeed_filtered 	= _tecs.tas_state();
+	t.hgt_setpoint_adj			= _tecs.hgt_setpoint_adj();
+	t.vert_pos_state		= _tecs.vert_pos_state();
+	t.TAS_setpoint_adj			= _tecs.TAS_setpoint_adj();
+	t.tas_state 	= _tecs.tas_state();
 
 	t.hgt_rate_setpoint		= _tecs.hgt_rate_setpoint();
 	t.vert_vel_state		= _tecs.vert_vel_state();
 
-	t.airspeedDerivativeSp	= _tecs.TAS_rate_setpoint();
-	t.airspeedDerivative	= _tecs.speed_derivative();
+	t.TAS_rate_setpoint	= _tecs.TAS_rate_setpoint();
+	t.speed_derivative	= _tecs.speed_derivative();
 
-	t.totalEnergyError				= _tecs.STE_error();
-	t.totalEnergyRateError			= _tecs.STE_rate_error();
-	t.energyDistributionError		= _tecs.SEB_error();
-	t.energyDistributionRateError	= _tecs.SEB_rate_error();
+	t.STE_error				= _tecs.STE_error();
+	t.STE_rate_error			= _tecs.STE_rate_error();
+	t.SEB_error		= _tecs.SEB_error();
+	t.SEB_rate_error	= _tecs.SEB_rate_error();
 
-	t.throttle_integ	= _tecs.throttle_integ_state();
-	t.pitch_integ		= _tecs.pitch_integ_state();
+	t.throttle_integ_state	= _tecs.throttle_integ_state();
+	t.pitch_integ_state		= _tecs.pitch_integ_state();
 
 	if (_tecs_status_pub != nullptr) {
 		orb_publish(ORB_ID(tecs_status), _tecs_status_pub, &t);
