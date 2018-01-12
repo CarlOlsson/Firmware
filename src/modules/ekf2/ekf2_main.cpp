@@ -820,7 +820,7 @@ void Ekf2::run()
 
 		if (vehicle_status_updated) {
 			// only fuse synthetic sideslip measurements if conditions are met
-			bool fuse_beta = !vehicle_status.is_rotary_wing && (_fuseBeta.get() == 1);
+			bool fuse_beta = !vehicle_status.is_rotary_wing && !vehicle_status.in_transition_mode && (_fuseBeta.get() == 1);
 			_ekf.set_fuse_beta_flag(fuse_beta);
 
 			// let the EKF know if the vehicle motion is that of a fixed wing (forward flight only relative to wind)
