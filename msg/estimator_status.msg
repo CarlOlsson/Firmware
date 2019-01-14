@@ -110,3 +110,5 @@ bool pre_flt_fail # true when estimator has failed pre-flight checks and the veh
 # legacy local position estimator (LPE) flags
 uint8 health_flags		# Bitmask to indicate sensor health states (vel, pos, hgt)
 uint8 timeout_flags		# Bitmask to indicate timeout flags (vel, pos, hgt)
+float32[16] quat_covariances	# Diagonal Elements of Covariance Matrix
+uint8 yaw_var_inc_counter
