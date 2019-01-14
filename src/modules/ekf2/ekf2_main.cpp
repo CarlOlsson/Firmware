@@ -89,6 +89,8 @@ using namespace time_literals;
 
 extern "C" __EXPORT int ekf2_main(int argc, char *argv[]);
 
+static bool trigger_yaw_var = false;
+
 class Ekf2 final : public ModuleBase<Ekf2>, public ModuleParams
 {
 public:
@@ -251,6 +253,7 @@ private:
 	int32_t _gps_alttitude_ellipsoid[GPS_MAX_RECEIVERS] {};	///< altitude in 1E-3 meters (millimeters) above ellipsoid
 	uint64_t _gps_alttitude_ellipsoid_previous_timestamp[GPS_MAX_RECEIVERS] {}; ///< storage for previous timestamp to compute dt
 	float   _wgs84_hgt_offset = 0;  ///< height offset between AMSL and WGS84
+	uint8_t _yaw_var_inc_counter = 0;
 
 	int _airdata_sub{-1};
 	int _airspeed_sub{-1};
@@ -964,6 +967,14 @@ void Ekf2::run()
 			}
 		}
 
+		if (trigger_yaw_var) {
+			_ekf.uncorrelateQuatStates();
+			float add_uncertainty = fmaxf(_params->mag_heading_noise, 1.0e-2f);
+			_ekf.increaseQuatYawErrVariance(add_uncertainty * add_uncertainty);
+			trigger_yaw_var = false;
+			_yaw_var_inc_counter++;
+		}
+
 		// read gps1 data if available
 		bool gps1_updated = false;
 		orb_check(_gps_subs[0], &gps1_updated);
@@ -1542,6 +1553,7 @@ void Ekf2::run()
 			_ekf.get_state_delayed(status.states);
 			status.n_states = 24;
 			_ekf.get_covariances(status.covariances);
+			_ekf.get_quat_covariances(status.quat_covariances);
 			_ekf.get_gps_check_status(&status.gps_check_fail_flags);
 			// only report enabled GPS check failures (the param indexes are shifted by 1 bit, because they don't include
 			// the GPS Fix bit, which is always checked)
@@ -1561,6 +1573,7 @@ void Ekf2::run()
 			status.health_flags = 0.0f; // unused
 			status.timeout_flags = 0.0f; // unused
 			status.pre_flt_fail = _preflt_fail;
+			status.yaw_var_inc_counter = _yaw_var_inc_counter;
 
 			if (_estimator_status_pub == nullptr) {
 				_estimator_status_pub = orb_advertise(ORB_ID(estimator_status), &status);
@@ -2463,6 +2476,8 @@ Ekf2 *Ekf2::instantiate(int argc, char *argv[])
 
 int Ekf2::custom_command(int argc, char *argv[])
 {
+	trigger_yaw_var = true;
+	printf("trigger_yaw_var: %s\n", trigger_yaw_var ? "true" : "false");
 	return print_usage("unknown command");
 }
 
