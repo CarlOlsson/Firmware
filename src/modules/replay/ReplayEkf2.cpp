@@ -96,7 +96,8 @@ ReplayEkf2::handleTopicUpdate(Subscription &sub, void *data, std::ifstream &repl
 
 		return true;
 
-	} else if (sub.orb_meta == ORB_ID(vehicle_status) || sub.orb_meta == ORB_ID(vehicle_land_detected)) {
+	} else if (sub.orb_meta == ORB_ID(vehicle_status) || sub.orb_meta == ORB_ID(vehicle_land_detected)
+		   || sub.orb_meta == ORB_ID(vehicle_gps_position)) {
 		return publishTopic(sub, data);
 	} // else: do not publish
 
@@ -148,7 +149,7 @@ ReplayEkf2::publishEkf2Topics(const ekf2_timestamps_s &ekf2_timestamps, std::ifs
 
 	handle_sensor_publication(ekf2_timestamps.airspeed_timestamp_rel, _airspeed_msg_id);
 	handle_sensor_publication(ekf2_timestamps.distance_sensor_timestamp_rel, _distance_sensor_msg_id);
-	handle_sensor_publication(ekf2_timestamps.optical_flow_timestamp_rel, _optical_flow_msg_id);
+	// handle_sensor_publication(ekf2_timestamps.optical_flow_timestamp_rel, _optical_flow_msg_id);
 	handle_sensor_publication(ekf2_timestamps.vehicle_air_data_timestamp_rel, _vehicle_air_data_msg_id);
 	handle_sensor_publication(ekf2_timestamps.vehicle_magnetometer_timestamp_rel, _vehicle_magnetometer_msg_id);
 	// handle_sensor_publication(ekf2_timestamps.visual_odometry_timestamp_rel, _vehicle_visual_odometry_msg_id);
